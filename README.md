@@ -88,7 +88,9 @@ def getMaxLines(movielist):
 * takes the raw line, strips only the movie line.
 * remove from the movie line unnecessary marks and swtich to lower case 
 * strip the movie name 
-* Check the parameter K, that tells you how many sentences you want to put together
+* Check the parameter K, that tells you how many sentences you want to combie into one sentences.
+* The k parametes is important because if it's equals 1 the sentence can be too short to learn something, but if k is to high we can risk not having enough sentences to build a model.
+* Later we'll see the results for k values from 1 till 5.
 
 Returns a tuple of the movie name + a list of all the movie lines(clean)
 
