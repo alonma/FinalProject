@@ -21,10 +21,10 @@ import nltk
 import re
 import string 
 
-fileName='C:/Users/Alon/Desktop/Alon/School/4th year/SemesterB/Data science/Project/Data/cornell movie-dialogs corpus/movie_lines.txt'
+fileName='C:/Users/Lior/Desktop/FinalProject-master/FinalProject-master/movie_lines.txt'
 with open(fileName) as f:
     lines = f.readlines()
-fileName='C:/Users/Alon/Desktop/Alon/School/4th year/SemesterB/Data science/Project/Data/cornell movie-dialogs corpus/movie_titles_metadata.txt'
+fileName='C:/Users/Lior/Desktop/FinalProject-master/FinalProject-master/movie_titles_metadata.txt'
 with open(fileName) as f:
     titles = f.readlines()
 ```
@@ -88,9 +88,7 @@ def getMaxLines(movielist):
 * takes the raw line, strips only the movie line.
 * remove from the movie line unnecessary marks and swtich to lower case 
 * strip the movie name 
-* Check the parameter K, that tells you how many sentences you want to combie into one sentences.
-* The k parametes is important because if it's equals 1 the sentence can be too short to learn something, but if k is to high we can risk not having enough sentences to build a model.
-* Later we'll see the results for k values from 1 till 5.
+* Check the parameter K, that tells you how many sentences you want to put together
 
 Returns a tuple of the movie name + a list of all the movie lines(clean)
 
@@ -160,7 +158,7 @@ def makeDB(k):
     comedyDf=makeCsv(movieComedy[1],movieComedy[0],'Comedy')
     AdventureDf=makeCsv(movieAdventure[1],movieAdventure[0],'Adventure')
     result = pd.concat([dramaDf,comedyDf,AdventureDf])
-    result.to_csv('C:/Users/Alon/Desktop/Alon/School/4th year/SemesterB/Data science/Project/Data/MoviesLines'+str(k)+'.csv')
+    result.to_csv('C:/Users/Lior/Desktop/FinalProject-master/FinalProject-master/MoviesLines'+str(k)+'.csv')
     return result
 ```
 
@@ -266,12 +264,12 @@ data=createModels(result)
 createPlot(data)
 ```
 
-    (3997, 2886)
-    RandomForestClassifier: 0.6326276463262764
-    knn: 0.48816936488169366
-    svm: 0.6737235367372354
-    DecisionTreeClassifier: 0.5529265255292652
-    LogisticRegression: 0.6787048567870486
+    (3997L, 2886L)
+    RandomForestClassifier: 0.632627646326
+    knn: 0.488169364882
+    svm: 0.673723536737
+    DecisionTreeClassifier: 0.552926525529
+    LogisticRegression: 0.678704856787
     
 
 
@@ -298,48 +296,48 @@ for i in range(2,6):
     createPlot(data)
 ```
 
-    (1998, 2886)
-    RandomForestClassifier: 0.6539379474940334
-    knn: 0.513126491646778
-    svm: 0.7303102625298329
-    DecisionTreeClassifier: 0.5465393794749404
-    LogisticRegression: 0.747016706443914
+    (1998L, 2886L)
+    RandomForestClassifier: 0.653937947494
+    knn: 0.513126491647
+    svm: 0.73031026253
+    DecisionTreeClassifier: 0.546539379475
+    LogisticRegression: 0.747016706444
     
 
 
 ![png](output_25_1.png)
 
 
-    (1332, 2384)
-    RandomForestClassifier: 0.6616541353383458
-    knn: 0.48120300751879697
-    svm: 0.6766917293233082
-    DecisionTreeClassifier: 0.5902255639097744
-    LogisticRegression: 0.7218045112781954
+    (1332L, 2384L)
+    RandomForestClassifier: 0.661654135338
+    knn: 0.481203007519
+    svm: 0.676691729323
+    DecisionTreeClassifier: 0.59022556391
+    LogisticRegression: 0.721804511278
     
 
 
 ![png](output_25_3.png)
 
 
-    (1000, 1980)
-    RandomForestClassifier: 0.7171717171717171
-    knn: 0.5252525252525253
-    svm: 0.696969696969697
-    DecisionTreeClassifier: 0.5505050505050505
-    LogisticRegression: 0.7525252525252525
+    (1000L, 1980L)
+    RandomForestClassifier: 0.717171717172
+    knn: 0.525252525253
+    svm: 0.69696969697
+    DecisionTreeClassifier: 0.550505050505
+    LogisticRegression: 0.752525252525
     
 
 
 ![png](output_25_5.png)
 
 
-    (800, 1780)
-    RandomForestClassifier: 0.6024096385542169
-    knn: 0.4759036144578313
-    svm: 0.6686746987951807
-    DecisionTreeClassifier: 0.5120481927710844
-    LogisticRegression: 0.6746987951807228
+    (800L, 1780L)
+    RandomForestClassifier: 0.602409638554
+    knn: 0.475903614458
+    svm: 0.668674698795
+    DecisionTreeClassifier: 0.512048192771
+    LogisticRegression: 0.674698795181
     
 
 
@@ -351,3 +349,296 @@ for i in range(2,6):
 1. AS we can see The scores were better with higher K until we reached the value of 5. 
 2. In all of our model, Logistic regression was the best fit.
 3. the best score was 75.5% that was achived when K=4.
+
+## Third and Forth part of the project:
+### building kares Model for generate sentences
+
+
+```python
+import numpy as np
+import theano
+import keras
+import pandas as pd
+import random
+```
+
+
+```python
+from keras.models import Sequential
+from keras.layers.core import Dense, Activation, Flatten
+from keras.layers.wrappers import TimeDistributed
+from keras.layers.embeddings import Embedding
+from keras.layers.recurrent import LSTM
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.text import text_to_word_sequence
+```
+
+### After we finished importing all the data we can start preparing it.
+
+## Create a model function
+ We created a function that gets the movie text and create a squential nuernal network using embedding technique.
+ 
+ We turn the text into word matrix, compile and fit the model.
+
+
+```python
+def makeModel(movie):
+    text2 = text_to_word_sequence(movie, lower=False, split=" ") #using only 10000 first words
+    token = Tokenizer(nb_words=2000,char_level=False)
+    token.fit_on_texts(text2)
+    text_mtx = token.texts_to_matrix(text2, mode='binary')
+
+    text_mtx.shape
+
+    input_ = text_mtx[:-1]
+    output_ = text_mtx[1:]
+    input_.shape, output_.shape
+
+    model = Sequential()
+    model.add(Embedding(input_dim=input_.shape[1],output_dim= 42, input_length=input_.shape[1]))
+    model.add(Flatten())
+    model.add(Dense(output_.shape[1], activation='sigmoid'))
+    model.compile(loss='categorical_crossentropy', optimizer='rmsprop',metrics=["accuracy"])
+    model.fit(input_, y=output_, batch_size=300, nb_epoch=7, verbose=1, validation_split=0.2)
+    return model
+```
+
+## get next word function
+
+We'll create a function thet gets the word metrix and randommaly select a word from it in order to create a new sentence.
+
+
+```python
+def get_next(text,token,model,fullmtx,fullText):
+    tmp = text_to_word_sequence(text, lower=False, split=" ")
+    tmp = token.texts_to_matrix(tmp, mode='binary')
+    p = model.predict(tmp)
+    x= np.random.random_sample()*1000
+    return fullText[int(x)]
+```
+
+## Create new sentence.
+
+According to the movie text and the relevenat model for each movie, we're creating new sentences.
+
+1) total of 350 sentences for each movie.
+2) Length of sentence is between 2 and 12 word.
+
+
+```python
+def createSentences(model,movie):
+    text2 = text_to_word_sequence(movie, lower=False, split=" ") #using only 10000 first words
+    token = Tokenizer(nb_words=2000,char_level=False)
+    token.fit_on_texts(text2)
+    text_mtx = token.texts_to_matrix(text2, mode='binary')
+    text_mtx.shape
+    word="b"
+    newLine=[]
+    for j in range(0,350):
+        y=""
+        k=int(random.random()*10+2)
+        for i in range(0,k):
+            word=get_next(word,token,model,text_mtx,text2)
+            y=y+' '+word
+        newLine.append(y)
+    
+    return newLine
+
+```
+
+## Make it happen.
+
+Now we use the function that we created in order to:
+1) create one string for each movie
+2) create 3 models of each movie
+3) create new sentences for each movie and make them into a list
+
+
+```python
+lines=pd.read_csv("C:/Users/Lior/Desktop/FinalProject-master/FinalProject-master/MoviesLines2.csv")
+lines1=lines[lines.name == ' casino ']
+lines2=lines[lines.name == ' chill factor ']
+lines3=lines[lines.name == ' innerspace ']
+text1=lines1["lines"]
+text2=lines2["lines"]
+text3=lines3["lines"]
+
+movie1=' '.join(line for line in text1)
+movie2=' '.join(line for line in text2)
+movie3=' '.join(line for line in text3)
+
+model1=makeModel(movie1)
+model2=makeModel(movie2)
+model3=makeModel(movie3)
+
+newLines1=createSentences(model1,movie1)
+newLines2=createSentences(model2,movie2)
+newLines3=createSentences(model3,movie3)
+
+```
+
+    Train on 13478 samples, validate on 3370 samples
+    Epoch 1/7
+    13478/13478 [==============================] - 321s - loss: 6.4801 - acc: 0.0146 - val_loss: 6.2197 - val_acc: 0.0145
+    Epoch 2/7
+    13478/13478 [==============================] - 319s - loss: 6.0435 - acc: 0.0174 - val_loss: 6.2399 - val_acc: 0.0582
+    Epoch 3/7
+    13478/13478 [==============================] - 319s - loss: 5.9135 - acc: 0.0507 - val_loss: 6.2828 - val_acc: 0.0582
+    Epoch 4/7
+    13478/13478 [==============================] - 319s - loss: 5.7432 - acc: 0.0507 - val_loss: 6.0929 - val_acc: 0.0582
+    Epoch 5/7
+    13478/13478 [==============================] - 319s - loss: 5.5315 - acc: 0.0507 - val_loss: 6.0181 - val_acc: 0.0608
+    Epoch 6/7
+    13478/13478 [==============================] - 320s - loss: 5.2741 - acc: 0.0881 - val_loss: 5.8455 - val_acc: 0.0994
+    Epoch 7/7
+    13478/13478 [==============================] - 320s - loss: 5.0126 - acc: 0.1134 - val_loss: 5.8379 - val_acc: 0.1083
+    Train on 5605 samples, validate on 1402 samples
+    Epoch 1/7
+    5605/5605 [==============================] - 133s - loss: 7.1055 - acc: 0.0152 - val_loss: 6.8974 - val_acc: 0.0221
+    Epoch 2/7
+    5605/5605 [==============================] - 133s - loss: 6.3612 - acc: 0.0202 - val_loss: 7.0153 - val_acc: 0.0221
+    Epoch 3/7
+    5605/5605 [==============================] - 133s - loss: 6.2731 - acc: 0.0202 - val_loss: 7.0610 - val_acc: 0.0221
+    Epoch 4/7
+    5605/5605 [==============================] - 133s - loss: 6.2145 - acc: 0.0202 - val_loss: 7.1050 - val_acc: 0.0221
+    Epoch 5/7
+    5605/5605 [==============================] - 133s - loss: 6.1433 - acc: 0.0202 - val_loss: 7.1767 - val_acc: 0.0221
+    Epoch 6/7
+    5605/5605 [==============================] - 133s - loss: 6.0800 - acc: 0.0232 - val_loss: 7.1529 - val_acc: 0.0200
+    Epoch 7/7
+    5605/5605 [==============================] - 133s - loss: 6.0034 - acc: 0.0348 - val_loss: 7.2849 - val_acc: 0.0292
+    Train on 4923 samples, validate on 1231 samples
+    Epoch 1/7
+    4923/4923 [==============================] - 119s - loss: 6.8800 - acc: 0.0134 - val_loss: 6.4871 - val_acc: 0.0057
+    Epoch 2/7
+    4923/4923 [==============================] - 118s - loss: 6.0500 - acc: 0.0130 - val_loss: 6.4891 - val_acc: 0.0057
+    Epoch 3/7
+    4923/4923 [==============================] - 118s - loss: 5.9239 - acc: 0.0140 - val_loss: 6.5758 - val_acc: 0.0284
+    Epoch 4/7
+    4923/4923 [==============================] - 118s - loss: 5.8515 - acc: 0.0286 - val_loss: 6.5374 - val_acc: 0.0284
+    Epoch 5/7
+    4923/4923 [==============================] - 118s - loss: 5.7887 - acc: 0.0353 - val_loss: 6.5445 - val_acc: 0.0284
+    Epoch 6/7
+    4923/4923 [==============================] - 118s - loss: 5.7126 - acc: 0.0353 - val_loss: 6.8179 - val_acc: 0.0284
+    Epoch 7/7
+    4923/4923 [==============================] - 118s - loss: 5.6586 - acc: 0.0376 - val_loss: 6.5428 - val_acc: 0.0382
+    
+
+
+    ---------------------------------------------------------------------------
+
+    KeyError                                  Traceback (most recent call last)
+
+    <ipython-input-152-10acf99fc11d> in <module>()
+         15 model3=makeModel(movie3)
+         16 
+    ---> 17 newLines1=createSentences(model1)
+         18 newLines2=createSentences(model2)
+         19 newLines3=createSentences(model3)
+    
+
+    <ipython-input-149-6c6fcdc7e3fb> in createSentences(model)
+          6         k=int(random.random()*10+2)
+          7         for i in range(0,k):
+    ----> 8             x=get_next(x,token,model,text_mtx,text2)
+          9             y=y+' '+x
+         10         newLine.append(y)
+    
+
+    <ipython-input-148-da653e577cda> in get_next(text, token, model, fullmtx, fullText)
+          4     p = model.predict(tmp)
+          5     x= np.random.random_sample()*2000
+    ----> 6     return fullText[int(x)]
+    
+
+    C:\Users\Lior\Anaconda2\lib\site-packages\pandas\core\series.pyc in __getitem__(self, key)
+        581         key = com._apply_if_callable(key, self)
+        582         try:
+    --> 583             result = self.index.get_value(self, key)
+        584 
+        585             if not lib.isscalar(result):
+    
+
+    C:\Users\Lior\Anaconda2\lib\site-packages\pandas\indexes\base.pyc in get_value(self, series, key)
+       1978         try:
+       1979             return self._engine.get_value(s, k,
+    -> 1980                                           tz=getattr(series.dtype, 'tz', None))
+       1981         except KeyError as e1:
+       1982             if len(self) > 0 and self.inferred_type in ['integer', 'boolean']:
+    
+
+    pandas\index.pyx in pandas.index.IndexEngine.get_value (pandas\index.c:3332)()
+    
+
+    pandas\index.pyx in pandas.index.IndexEngine.get_value (pandas\index.c:3035)()
+    
+
+    pandas\index.pyx in pandas.index.IndexEngine.get_loc (pandas\index.c:4018)()
+    
+
+    pandas\hashtable.pyx in pandas.hashtable.Int64HashTable.get_item (pandas\hashtable.c:6610)()
+    
+
+    pandas\hashtable.pyx in pandas.hashtable.Int64HashTable.get_item (pandas\hashtable.c:6554)()
+    
+
+    KeyError: 1691L
+
+
+## Create CSV's 
+
+Next steps:
+
+1) create csv for each new lines list
+2) concat all of them into one file in order to classify them
+
+
+```python
+df1 = pd.DataFrame(np.array(newLines1))
+df1.to_csv('C:/Users/Lior/Desktop/FinalProject-master/FinalProject-master/newLines1.csv')
+df2= pd.DataFrame(np.array(newLines2))
+df2.to_csv('C:/Users/Lior/Desktop/FinalProject-master/FinalProject-master/newLines2.csv')
+df3= pd.DataFrame(np.array(newLines3))
+df3.to_csv('C:/Users/Lior/Desktop/FinalProject-master/FinalProject-master/newLines3.csv')
+result = pd.concat([df1,df2,df3])
+result.to_csv('C:/Users/Lior/Desktop/FinalProject-master/FinalProject-master/newLines.csv')
+```
+
+## Final step - classiffy
+
+Like before
+
+1) Read the new Lines
+2) creare data features
+3) train the data on the models. 
+4) Plot the results
+
+
+```python
+np.random.seed(123)
+result=pd.read_csv("C:/Users/Lior/Desktop/FinalProject-master/FinalProject-master/newLines.csv")
+vectorizer = CountVectorizer(analyzer = "word", tokenizer = None,preprocessor = None,stop_words = None,max_features = 5000)
+train_data_features = vectorizer.fit_transform(result['lines'])
+train_data_features = train_data_features.toarray()
+vocab = vectorizer.get_feature_names()
+dist = np.sum(train_data_features, axis=0)
+print(train_data_features.shape)
+data=createModels(result)
+createPlot(data)
+```
+
+    (1050L, 726L)
+    RandomForestClassifier: 0.73786407767
+    knn: 0.587378640777
+    svm: 0.820388349515
+    DecisionTreeClassifier: 0.650485436893
+    LogisticRegression: 0.839805825243
+    
+
+
+![png](output_42_1.png)
+
+
+# Results:
+
+** We can see that with the Logistic regressing we got a 0.84 results and 0.82 with svm. **
