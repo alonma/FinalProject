@@ -642,3 +642,20 @@ createPlot(data)
 # Results:
 
 ** We can see that with the Logistic regressing we got a 0.84 results and 0.82 with svm. **
+
+# Summary
+
+In this project we wanted to explore the clasification problem of movie script text.
+
+* At first we took the data and created our database
+* Then we build all kind of classifires and check which one gave us the best results
+* We created a keras model that allowed us to generate new sentences from a specific movie.
+* We used our clasification models to check our new sentences.
+
+### Conclusions:
+
+* In order to create valid sentences we needed the movies with the biggest number of lines.
+* Our best models for text clasification were logistic regression and SVM, random forest was the weakest.
+* We need to keep balance in our 'K' Parameter, meaninng that the longest the sample is(few sentences combined together) it's better, but if we combine to much sentences we don't have enought samples to tarin.
+* When using the keras moudles the Sequential is very efficiant with text.
+* Again, the Logistic regression and SVM proved to be the best models giving us a score of 0.84.
